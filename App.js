@@ -1,6 +1,8 @@
-import { StyleSheet, Text, View } from "react-native";
-import Task from "../components/Task";
-export default function Index() {
+import { StatusBar } from 'expo-status-bar';
+import { StyleSheet, Text, View } from 'react-native';
+import Task from './components/Task';
+
+export default function App() {
   return (
     <View style={styles.container}>
       <View style={styles.tasksWrapper}>
@@ -32,4 +34,4 @@ const styles = StyleSheet.create({
   items: {
     marginTop: 30,
   }
-})
+});
