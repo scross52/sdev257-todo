@@ -1,112 +1,97 @@
-import React, {useState} from 'react';
-import { Platform, KeyboardAvoidingView, StyleSheet, Text, TextInput, View, TouchableOpacity, Keyboard } from 'react-native';
-import Task from './components/Task';
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
+import MapView, { Marker } from "react-native-maps";
+import * as Location from "expo-location";
+
+const GOOGLE_PLACES_API_KEY = "AIzaSyBriql31PkO7U69pixtSiksqwe9YKIN3eA";
 
 export default function App() {
-    const [task, setTask] = useState();
-    const [taskItems, setTaskItems] = useState([]);
+  const [location, setLocation] = useState(null);
+  const [restaurants, setRestaurants] = useState([]);
+  const [errorMsg, setErrorMsg] = useState(null);
 
-    const handleAddTask = () => {
-      Keyboard.dismiss();
-      setTaskItems([...taskItems, task])
-      setTask(null);
-    }
+  useEffect(() => {
+    (async () => {
+      
+      let { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== "granted") {
+        setErrorMsg("Permission to access location was denied");
+        return;
+      }
 
-    const completeTask = (index) => {
-      let itemsCopy = [...taskItems];
-      itemsCopy.splice(index, 1);
-      setTaskItems(itemsCopy);
-    }
+      
+      let loc = await Location.getCurrentPositionAsync({});
+      setLocation(loc.coords);
 
+
+      // ****I WILL NOT BE USING THIS API AS IT REQUIRES A PAYMENT ACCOUNT AND I DO NOT FEEL COMFORTABLE PUTTING IN MY PAYMENT INFORMATION****
+
+      // const url = `https://maps.googleapis.com/maps/api/place/nearbysearch/json?location=${loc.coords.latitude},${loc.coords.longitude}&radius=1000&type=restaurant&key=${GOOGLE_PLACES_API_KEY}`;
+      
+      // try {
+      //   const response = await fetch(url);
+      //   const data = await response.json();
+      //   setRestaurants(data.results);
+      // } catch (error) {
+      //   console.error(error);
+      // }
+    })();
+  }, []);
+
+  
+  if (errorMsg) return <Text>{errorMsg}</Text>;
+  if (!location) return <ActivityIndicator size="large" style={{ flex: 1 }} />;
+  
+//  Example of retuarant marker
+  const restaurant = {
+    name: "Joe's Pizza",
+    description: "Best pizza in town!",
+    latitude: location.latitude + 0.0015, // slightly north
+    longitude: location.longitude + 0.0015, // slightly east
+  };
 
   return (
     <View style={styles.container}>
-      <View style={styles.tasksWrapper}>
-      <Text style={styles.sectionTitle}>Today's Tasks</Text>
-
-      <View style={styles.items}>
-        {/* This is where the tasks will go */}
-        {
-          taskItems.map((item, index) => {
-            return (
-              <TouchableOpacity onPress={() => completeTask(index)}>
-                <Task key={index} text={item} />
-              </TouchableOpacity>
-            )
-          })
-        }
-      </View>
-
-      </View>
-
-      {/* Wriate a task */}
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "position"}
-        style={styles.writeTaskWrapper}
-        >
-          <View style={styles.inputRow}>
-            <TextInput style={styles.input} placeholder={'Write a task'} value={task} onChangeText={text => setTask(text)} />
-
-            <TouchableOpacity onPress={() => handleAddTask()}>
-              <View style={styles.addWrapper}>
-                <Text style={styles.addText}>+</Text>
-              </View>
-            </TouchableOpacity>
-          </View>
-        </KeyboardAvoidingView>
-
+      <MapView
+        style={styles.map}
+        initialRegion={{
+          latitude: location.latitude,
+          longitude: location.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        }}
+        showsUserLocation
+        followsUserLocation
+      >
+        {/* Example of resturant marker */}
+        <Marker
+          coordinate={{
+            latitude: restaurant.latitude,
+            longitude: restaurant.longitude,
+          }}
+          title={restaurant.name}
+          description={restaurant.description}
+          pinColor="orange"
+        />
+        {/* {restaurants.map((r) => (
+          <Marker
+            key={r.place_id}
+            coordinate={{
+              latitude: r.geometry.location.lat,
+              longitude: r.geometry.location.lng,
+            }}
+            title={r.name}
+            description={r.vicinity}
+            pinColor="orange"
+          />
+        ))} */}
+      </MapView>
     </View>
   );
 }
 
+
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#E8EAED'
-  },
-  tasksWrapper: {
-    paddingTop: 80,
-    paddingHorizontal: 20,
-  },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  items: {
-    marginTop: 30,
-  },
-  inputRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    width: '100%',
-  }, 
-  writeTaskWrapper: {
-    position: 'absolute',
-    bottom: 60,
-    width: '100%',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-  },
-  input: {
-    paddingVertical: 15,
-    paddingHorizontal: 15,
-    backgroundColor: '#FFF',
-    borderRadius: 60,
-    borderColor: '#C0C0C0',
-    borderWidth: 1,
-    width: 250,
-  },
-  addWrapper: {
-    width: 60,
-    height: 60,
-    backgroundColor: '#FFF',
-    borderRadius: 60,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderColor: '#C0C0C0',
-    borderWidth: 1,
-  },
-  addText: {},
+  container: { flex: 1, marginVertical: 150, marginHorizontal: 50, },
+  map: { flex: 1 },
 });
