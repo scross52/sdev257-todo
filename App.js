@@ -3,7 +3,7 @@ import { View, StyleSheet, ActivityIndicator, Text } from "react-native";
 import MapView, { Marker } from "react-native-maps";
 import * as Location from "expo-location";
 
-const GOOGLE_PLACES_API_KEY = "AIzaSyBriql31PkO7U69pixtSiksqwe9YKIN3eA";
+const GOOGLE_PLACES_API_KEY = "";
 
 export default function App() {
   const [location, setLocation] = useState(null);
